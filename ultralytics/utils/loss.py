@@ -85,6 +85,53 @@ class FocalLoss(nn.Module):
         return loss.mean(1).sum()
 
 
+
+
+class DynamicRobustFocalLoss(nn.Module):
+    """Classification loss for long-tail and noisy UAV vehicle detection."""
+
+    def __init__(
+        self,
+        gamma: float = 2.0,
+        alpha: float = 0.25,
+        noise_beta: float = 0.2,
+        tail_temperature: float = 1.0,
+        truncation: float = 3.0,
+    ):
+        super().__init__()
+        self.gamma = gamma
+        self.alpha = alpha
+        self.noise_beta = noise_beta
+        self.tail_temperature = tail_temperature
+        self.truncation = truncation
+
+    def forward(
+        self,
+        pred: torch.Tensor,
+        target: torch.Tensor,
+        class_weights: torch.Tensor | None = None,
+        tail_boost: torch.Tensor | None = None,
+    ) -> torch.Tensor:
+        target = target.to(dtype=pred.dtype)
+        prob = pred.sigmoid()
+        base = F.binary_cross_entropy_with_logits(pred, target, reduction="none")
+        p_t = target * prob + (1.0 - target) * (1.0 - prob)
+        focal = (1.0 - p_t).pow(self.gamma)
+        alpha = target * self.alpha + (1.0 - target) * (1.0 - self.alpha)
+
+        robust = torch.exp(-self.noise_beta * base.detach())
+        robust = torch.where(target > 0, robust, torch.ones_like(robust))
+        if self.truncation > 0:
+            robust = torch.clamp(robust, min=math.exp(-self.truncation), max=1.0)
+
+        loss = base * focal * alpha * robust
+        if class_weights is not None:
+            loss = loss * class_weights
+        if tail_boost is not None:
+            loss = loss * torch.pow(tail_boost, self.tail_temperature)
+        return loss
+
+
 class DFLoss(nn.Module):
     """Criterion class for computing Distribution Focal Loss (DFL)."""
 
@@ -354,6 +401,17 @@ class v8DetectionLoss:
         if self.class_weights is not None:
             self.class_weights = self.class_weights.to(device).view(1, 1, -1)
 
+        self.dynamic_cls = DynamicRobustFocalLoss(
+            gamma=getattr(h, "uav_loss_gamma", 2.0),
+            alpha=getattr(h, "uav_loss_alpha", 0.25),
+            noise_beta=getattr(h, "uav_noise_beta", 0.2),
+            tail_temperature=getattr(h, "uav_tail_temperature", 1.0),
+            truncation=getattr(h, "uav_loss_trunc", 3.0),
+        )
+        self.tail_class_idx = torch.as_tensor(getattr(h, "tail_class_idx", []), dtype=torch.long, device=device)
+        self.tail_boost = float(getattr(h, "tail_class_boost", 1.0))
+        self.use_uav_loss = bool(getattr(h, "use_uav_loss", False))
+
         self.assigner = TaskAlignedAssigner(
             topk=tal_topk,
             num_classes=self.nc,
@@ -364,6 +422,16 @@ class v8DetectionLoss:
         )
         self.bbox_loss = BboxLoss(m.reg_max).to(device)
         self.proj = torch.arange(m.reg_max, dtype=torch.float, device=device)
+
+    def get_tail_boost_tensor(self, pred_scores: torch.Tensor) -> torch.Tensor | None:
+        """Return per-class tail boost tensor for long-tail classes like bus and truck."""
+        if self.tail_class_idx.numel() == 0 or self.tail_boost == 1.0:
+            return None
+        boost = torch.ones((1, 1, self.nc), device=pred_scores.device, dtype=pred_scores.dtype)
+        valid = self.tail_class_idx[(self.tail_class_idx >= 0) & (self.tail_class_idx < self.nc)]
+        if valid.numel():
+            boost[..., valid] = self.tail_boost
+        return boost
 
     def preprocess(self, targets: torch.Tensor, batch_size: int, scale_tensor: torch.Tensor) -> torch.Tensor:
         """Preprocess targets by converting to tensor format and scaling coordinates."""
@@ -428,10 +496,20 @@ class v8DetectionLoss:
         target_scores_sum = max(target_scores.sum(), 1)
 
         # Cls loss with optional class weighting
-        bce_loss = self.bce(pred_scores, target_scores.to(dtype))  # (bs, num_anchors, nc)
-        if self.class_weights is not None:
-            bce_loss *= self.class_weights
-        loss[1] = bce_loss.sum() / target_scores_sum  # BCE
+        class_weights = self.class_weights.to(dtype) if self.class_weights is not None else None
+        if self.use_uav_loss:
+            loss_cls = self.dynamic_cls(
+                pred_scores,
+                target_scores.to(dtype),
+                class_weights=class_weights,
+                tail_boost=self.get_tail_boost_tensor(pred_scores),
+            )
+            loss[1] = loss_cls.sum() / target_scores_sum
+        else:
+            bce_loss = self.bce(pred_scores, target_scores.to(dtype))  # (bs, num_anchors, nc)
+            if class_weights is not None:
+                bce_loss *= class_weights
+            loss[1] = bce_loss.sum() / target_scores_sum  # BCE
 
         # Bbox loss
         if fg_mask.sum():

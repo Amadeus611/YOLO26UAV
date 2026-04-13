@@ -18,9 +18,21 @@ from ultralytics.utils.torch_utils import TORCH_1_11, fuse_conv_and_bn, smart_in
 from .block import DFL, SAVPE, BNContrastiveHead, ContrastiveHead, Proto, Proto26, RealNVP, Residual, SwiGLUFFN
 from .conv import Conv, DWConv
 from .transformer import MLP, DeformableTransformerDecoder, DeformableTransformerDecoderLayer
+from .uav_blocks import TextureAwareEnhance
 from .utils import bias_init_with_prob, linear_init
 
-__all__ = "OBB", "Classify", "Detect", "Pose", "RTDETRDecoder", "Segment", "YOLOEDetect", "YOLOESegment", "v10Detect"
+__all__ = (
+    "OBB",
+    "Classify",
+    "Detect",
+    "Pose",
+    "RTDETRDecoder",
+    "Segment",
+    "YOLOEDetect",
+    "YOLOESegment",
+    "UAVDetect",
+    "v10Detect",
+)
 
 
 class Detect(nn.Module):
@@ -249,6 +261,68 @@ class Detect(nn.Module):
     def fuse(self) -> None:
         """Remove the one2many head for inference optimization."""
         self.cv2 = self.cv3 = None
+
+
+
+
+class UAVDetect(Detect):
+    """UAV-oriented detect head with stronger fine-grained classification calibration."""
+
+    def __init__(self, nc: int = 80, reg_max=16, end2end=False, ch: tuple = ()):
+        super().__init__(nc=nc, reg_max=reg_max, end2end=end2end, ch=ch)
+        cls_hidden = max(ch[0], min(self.nc, 128))
+        self.cls_refine = nn.ModuleList(TextureAwareEnhance(x, x) for x in ch)
+        self.cls_bridge = nn.ModuleList(Conv(x, cls_hidden, 1) for x in ch)
+        self.cls_gate = nn.ModuleList(nn.Sequential(nn.Conv2d(cls_hidden, self.nc, 1), nn.Sigmoid()) for _ in ch)
+        self.margin = 0.05
+
+        self.cv3 = nn.ModuleList(
+            nn.Sequential(
+                Conv(x, cls_hidden, 3),
+                Conv(cls_hidden, cls_hidden, 3),
+                nn.Conv2d(cls_hidden, self.nc, 1),
+            )
+            for x in ch
+        )
+        if end2end:
+            self.one2one_cv3 = copy.deepcopy(self.cv3)
+            self.one2one_cls_refine = copy.deepcopy(self.cls_refine)
+            self.one2one_cls_bridge = copy.deepcopy(self.cls_bridge)
+            self.one2one_cls_gate = copy.deepcopy(self.cls_gate)
+
+    def _forward_cls_branch(self, feat: torch.Tensor, refine: nn.Module, bridge: nn.Module, gate: nn.Module, head: nn.Module):
+        refined = refine(feat)
+        logits = head(refined)
+        relation = gate(bridge(refined))
+        return logits * (1.0 + relation) - self.margin * (1.0 - relation)
+
+    def forward_head(
+        self, x: list[torch.Tensor], box_head: torch.nn.Module = None, cls_head: torch.nn.Module = None
+    ) -> dict[str, torch.Tensor]:
+        if box_head is None or cls_head is None:
+            return dict()
+        bs = x[0].shape[0]
+        boxes = torch.cat([box_head[i](x[i]).view(bs, 4 * self.reg_max, -1) for i in range(self.nl)], dim=-1)
+
+        if cls_head is self.one2one_cv3 and hasattr(self, "one2one_cls_refine"):
+            refine_modules, bridge_modules, gate_modules = (
+                self.one2one_cls_refine,
+                self.one2one_cls_bridge,
+                self.one2one_cls_gate,
+            )
+        else:
+            refine_modules, bridge_modules, gate_modules = self.cls_refine, self.cls_bridge, self.cls_gate
+
+        scores = torch.cat(
+            [
+                self._forward_cls_branch(x[i], refine_modules[i], bridge_modules[i], gate_modules[i], cls_head[i]).view(
+                    bs, self.nc, -1
+                )
+                for i in range(self.nl)
+            ],
+            dim=-1,
+        )
+        return dict(boxes=boxes, scores=scores, feats=x)
 
 
 class Segment(Detect):
