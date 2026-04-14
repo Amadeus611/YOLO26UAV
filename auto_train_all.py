@@ -233,7 +233,7 @@ def main():
             # -------------------------------------------------
             # 实验核心变量
             # -------------------------------------------------
-            data="EVD4UAV.yaml",                  # 数据集配置文件，正式训练前确认路径正确
+            data="ultralytics/cfg/datasets/EVD4UAV.yaml",  # EVD4UAV 数据集配置文件
             name=exp["name"],                     # 当前实验名称，结果会保存到 project/name
             batch=exp["batch"],                   # 每张 GPU 的 batch size，显存不够就调小
             project="/home/ssssss/1yolo/Ablation_Results",  # 实验结果保存目录

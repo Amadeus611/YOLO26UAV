@@ -9,8 +9,7 @@ task: detect
 mode: train
 
 # data
-# Replace with your actual EVD4UAV yaml path before training.
-data: ultralytics/cfg/datasets/VisDrone.yaml
+data: ultralytics/cfg/datasets/EVD4UAV.yaml
 
 # optimization
 epochs: 200

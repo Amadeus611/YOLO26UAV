@@ -1,0 +1,22 @@
+# Ultralytics AGPL-3.0 License - https://ultralytics.com/license
+
+# EVD4UAV vehicle detection dataset in YOLO format.
+# Directory structure:
+# EVD4UAV/YOLO_Dataset/
+#   images/
+#     train/
+#     val/
+#   labels/
+#     train/
+#     val/
+
+path: /home/ssssss/1yolo/EVD4UAV/YOLO_Dataset
+train: images/train
+val: images/val
+test:
+
+nc: 3
+names:
+  0: car
+  1: bus
+  2: truck
