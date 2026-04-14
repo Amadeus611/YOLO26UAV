@@ -51,100 +51,100 @@ def main():
             "use_weighted_sampler": False,  # 是否启用尾类图片加权采样
             "sample_tail_gain": 1.0,        # 尾类图片采样权重放大倍数
         },
-        {
-            "yaml": "ultralytics/cfg/models/26/yolo26s_ab02_p2.yaml",
-            "name": "Exp02_A1_P2",
-            "batch": 8,
-            "use_uav_loss": False,
-            "uav_noise_beta": 0.0,
-            "tail_class_boost": 1.0,
-            "use_weighted_sampler": False,
-            "sample_tail_gain": 1.0,
-        },
-        {
-            "yaml": "ultralytics/cfg/models/26/yolo26s_ab03_p2_tae.yaml",
-            "name": "Exp03_A2_P2_TAE",
-            "batch": 8,
-            "use_uav_loss": False,
-            "uav_noise_beta": 0.0,
-            "tail_class_boost": 1.0,
-            "use_weighted_sampler": False,
-            "sample_tail_gain": 1.0,
-        },
-        {
-            "yaml": "ultralytics/cfg/models/26/yolo26s_ab04_p2_csff.yaml",
-            "name": "Exp04_A3_P2_CSFF",
-            "batch": 8,
-            "use_uav_loss": False,
-            "uav_noise_beta": 0.0,
-            "tail_class_boost": 1.0,
-            "use_weighted_sampler": False,
-            "sample_tail_gain": 1.0,
-        },
-        {
-            "yaml": "ultralytics/cfg/models/26/yolo26s_ab05_p2_tae_csff_detect.yaml",
-            "name": "Exp05_A4_P2_TAE_CSFF_Detect",
-            "batch": 8,
-            "use_uav_loss": False,
-            "uav_noise_beta": 0.0,
-            "tail_class_boost": 1.0,
-            "use_weighted_sampler": False,
-            "sample_tail_gain": 1.0,
-        },
+        # {
+        #     "yaml": "ultralytics/cfg/models/26/yolo26s_ab02_p2.yaml",
+        #     "name": "Exp02_A1_P2",
+        #     "batch": 8,
+        #     "use_uav_loss": False,
+        #     "uav_noise_beta": 0.0,
+        #     "tail_class_boost": 1.0,
+        #     "use_weighted_sampler": False,
+        #     "sample_tail_gain": 1.0,
+        # },
+        # {
+        #     "yaml": "ultralytics/cfg/models/26/yolo26s_ab03_p2_tae.yaml",
+        #     "name": "Exp03_A2_P2_TAE",
+        #     "batch": 8,
+        #     "use_uav_loss": False,
+        #     "uav_noise_beta": 0.0,
+        #     "tail_class_boost": 1.0,
+        #     "use_weighted_sampler": False,
+        #     "sample_tail_gain": 1.0,
+        # },
+        # {
+        #     "yaml": "ultralytics/cfg/models/26/yolo26s_ab04_p2_csff.yaml",
+        #     "name": "Exp04_A3_P2_CSFF",
+        #     "batch": 8,
+        #     "use_uav_loss": False,
+        #     "uav_noise_beta": 0.0,
+        #     "tail_class_boost": 1.0,
+        #     "use_weighted_sampler": False,
+        #     "sample_tail_gain": 1.0,
+        # },
+        # {
+        #     "yaml": "ultralytics/cfg/models/26/yolo26s_ab05_p2_tae_csff_detect.yaml",
+        #     "name": "Exp05_A4_P2_TAE_CSFF_Detect",
+        #     "batch": 8,
+        #     "use_uav_loss": False,
+        #     "uav_noise_beta": 0.0,
+        #     "tail_class_boost": 1.0,
+        #     "use_weighted_sampler": False,
+        #     "sample_tail_gain": 1.0,
+        # },
 
-        # =====================================================
-        # Table 2: 副创新点 UAVDetect 检测头消融
-        # =====================================================
-        {
-            "yaml": "ultralytics/cfg/models/26/yolo26s_ab06_full_uavdetect.yaml",
-            "name": "Exp06_H1_UAVDetect_BCE",
-            "batch": 8,
-            "use_uav_loss": False,
-            "uav_noise_beta": 0.0,
-            "tail_class_boost": 1.0,
-            "use_weighted_sampler": False,
-            "sample_tail_gain": 1.0,
-        },
+        # # =====================================================
+        # # Table 2: 副创新点 UAVDetect 检测头消融
+        # # =====================================================
+        # {
+        #     "yaml": "ultralytics/cfg/models/26/yolo26s_ab06_full_uavdetect.yaml",
+        #     "name": "Exp06_H1_UAVDetect_BCE",
+        #     "batch": 8,
+        #     "use_uav_loss": False,
+        #     "uav_noise_beta": 0.0,
+        #     "tail_class_boost": 1.0,
+        #     "use_weighted_sampler": False,
+        #     "sample_tail_gain": 1.0,
+        # },
 
-        # =====================================================
-        # Table 3: 损失函数消融，模型结构固定为完整 UAVDetect
-        # =====================================================
-        {
-            "yaml": "ultralytics/cfg/models/26/yolo26s_ab06_full_uavdetect.yaml",
-            "name": "Exp07_L0_BCE",
-            "batch": 8,
-            "use_uav_loss": False,          # 原始 BCE 分类损失
-            "uav_loss_gamma": 2.0,          # Focal 指数，此组不用 UAV loss，仅占位
-            "uav_loss_alpha": 0.25,         # 正负样本平衡系数，此组不用 UAV loss，仅占位
-            "uav_noise_beta": 0.0,          # 噪声抑制关闭
-            "tail_class_boost": 1.0,
-            "use_weighted_sampler": False,
-            "sample_tail_gain": 1.0,
-        },
-        {
-            "yaml": "ultralytics/cfg/models/26/yolo26s_ab06_full_uavdetect.yaml",
-            "name": "Exp08_L1_Focal",
-            "batch": 8,
-            "use_uav_loss": True,           # 启用 UAV loss 框架，用 gamma/alpha 表现 Focal loss
-            "uav_loss_gamma": 2.0,          # 越大越关注难分类样本
-            "uav_loss_alpha": 0.25,         # 正样本权重，缓解前景/背景不平衡
-            "uav_noise_beta": 0.0,          # 设为 0，仅验证 Focal，不做噪声标签抑制
-            "tail_class_boost": 1.0,
-            "use_weighted_sampler": False,
-            "sample_tail_gain": 1.0,
-        },
-        {
-            "yaml": "ultralytics/cfg/models/26/yolo26s_ab06_full_uavdetect.yaml",
-            "name": "Exp09_L2_RobustFocal",
-            "batch": 8,
-            "use_uav_loss": True,
-            "uav_loss_gamma": 2.0,
-            "uav_loss_alpha": 0.25,
-            "uav_noise_beta": 0.2,          # 噪声标签抑制强度，降低疑似错标样本的梯度影响
-            "tail_class_boost": 1.0,
-            "use_weighted_sampler": False,
-            "sample_tail_gain": 1.0,
-        },
+        # # =====================================================
+        # # Table 3: 损失函数消融，模型结构固定为完整 UAVDetect
+        # # =====================================================
+        # {
+        #     "yaml": "ultralytics/cfg/models/26/yolo26s_ab06_full_uavdetect.yaml",
+        #     "name": "Exp07_L0_BCE",
+        #     "batch": 8,
+        #     "use_uav_loss": False,          # 原始 BCE 分类损失
+        #     "uav_loss_gamma": 2.0,          # Focal 指数，此组不用 UAV loss，仅占位
+        #     "uav_loss_alpha": 0.25,         # 正负样本平衡系数，此组不用 UAV loss，仅占位
+        #     "uav_noise_beta": 0.0,          # 噪声抑制关闭
+        #     "tail_class_boost": 1.0,
+        #     "use_weighted_sampler": False,
+        #     "sample_tail_gain": 1.0,
+        # },
+        # {
+        #     "yaml": "ultralytics/cfg/models/26/yolo26s_ab06_full_uavdetect.yaml",
+        #     "name": "Exp08_L1_Focal",
+        #     "batch": 8,
+        #     "use_uav_loss": True,           # 启用 UAV loss 框架，用 gamma/alpha 表现 Focal loss
+        #     "uav_loss_gamma": 2.0,          # 越大越关注难分类样本
+        #     "uav_loss_alpha": 0.25,         # 正样本权重，缓解前景/背景不平衡
+        #     "uav_noise_beta": 0.0,          # 设为 0，仅验证 Focal，不做噪声标签抑制
+        #     "tail_class_boost": 1.0,
+        #     "use_weighted_sampler": False,
+        #     "sample_tail_gain": 1.0,
+        # },
+        # {
+        #     "yaml": "ultralytics/cfg/models/26/yolo26s_ab06_full_uavdetect.yaml",
+        #     "name": "Exp09_L2_RobustFocal",
+        #     "batch": 8,
+        #     "use_uav_loss": True,
+        #     "uav_loss_gamma": 2.0,
+        #     "uav_loss_alpha": 0.25,
+        #     "uav_noise_beta": 0.2,          # 噪声标签抑制强度，降低疑似错标样本的梯度影响
+        #     "tail_class_boost": 1.0,
+        #     "use_weighted_sampler": False,
+        #     "sample_tail_gain": 1.0,
+        # },
         {
             "yaml": "ultralytics/cfg/models/26/yolo26s_ab06_full_uavdetect.yaml",
             "name": "Exp10_L3_DynamicRobustLongTail",
@@ -161,54 +161,54 @@ def main():
         # =====================================================
         # Table 4: bus/truck 参数策略消融，不作为论文创新点
         # =====================================================
-        {
-            "yaml": "ultralytics/cfg/models/26/yolo26s_ab06_full_uavdetect.yaml",
-            "name": "Exp11_T0_NoTailStrategy",
-            "batch": 8,
-            "use_uav_loss": True,
-            "uav_loss_gamma": 2.0,
-            "uav_loss_alpha": 0.25,
-            "uav_noise_beta": 0.2,
-            "tail_class_boost": 1.0,
-            "use_weighted_sampler": False,
-            "sample_tail_gain": 1.0,
-        },
-        {
-            "yaml": "ultralytics/cfg/models/26/yolo26s_ab06_full_uavdetect.yaml",
-            "name": "Exp12_T1_WeightedSampler",
-            "batch": 8,
-            "use_uav_loss": True,
-            "uav_loss_gamma": 2.0,
-            "uav_loss_alpha": 0.25,
-            "uav_noise_beta": 0.2,
-            "tail_class_boost": 1.0,
-            "use_weighted_sampler": True,   # 启用配置中尾类 bus/truck 的图片加权采样
-            "sample_tail_gain": 1.4,        # 含 bus/truck 图片被抽到的概率放大 1.4 倍
-        },
-        {
-            "yaml": "ultralytics/cfg/models/26/yolo26s_ab06_full_uavdetect.yaml",
-            "name": "Exp13_T2_TailLossBoost",
-            "batch": 8,
-            "use_uav_loss": True,
-            "uav_loss_gamma": 2.0,
-            "uav_loss_alpha": 0.30,
-            "uav_noise_beta": 0.2,
-            "tail_class_boost": 1.35,       # 只放大配置中尾类 bus/truck 对分类 loss 的贡献
-            "use_weighted_sampler": False,
-            "sample_tail_gain": 1.0,
-        },
-        {
-            "yaml": "ultralytics/cfg/models/26/yolo26s_ab06_full_uavdetect.yaml",
-            "name": "Exp14_T3_FullTailStrategy",
-            "batch": 8,
-            "use_uav_loss": True,
-            "uav_loss_gamma": 2.0,
-            "uav_loss_alpha": 0.30,
-            "uav_noise_beta": 0.2,
-            "tail_class_boost": 1.35,
-            "use_weighted_sampler": True,
-            "sample_tail_gain": 1.4,
-        },
+        # {
+        #     "yaml": "ultralytics/cfg/models/26/yolo26s_ab06_full_uavdetect.yaml",
+        #     "name": "Exp11_T0_NoTailStrategy",
+        #     "batch": 8,
+        #     "use_uav_loss": True,
+        #     "uav_loss_gamma": 2.0,
+        #     "uav_loss_alpha": 0.25,
+        #     "uav_noise_beta": 0.2,
+        #     "tail_class_boost": 1.0,
+        #     "use_weighted_sampler": False,
+        #     "sample_tail_gain": 1.0,
+        # },
+        # {
+        #     "yaml": "ultralytics/cfg/models/26/yolo26s_ab06_full_uavdetect.yaml",
+        #     "name": "Exp12_T1_WeightedSampler",
+        #     "batch": 8,
+        #     "use_uav_loss": True,
+        #     "uav_loss_gamma": 2.0,
+        #     "uav_loss_alpha": 0.25,
+        #     "uav_noise_beta": 0.2,
+        #     "tail_class_boost": 1.0,
+        #     "use_weighted_sampler": True,   # 启用配置中尾类 bus/truck 的图片加权采样
+        #     "sample_tail_gain": 1.4,        # 含 bus/truck 图片被抽到的概率放大 1.4 倍
+        # },
+        # {
+        #     "yaml": "ultralytics/cfg/models/26/yolo26s_ab06_full_uavdetect.yaml",
+        #     "name": "Exp13_T2_TailLossBoost",
+        #     "batch": 8,
+        #     "use_uav_loss": True,
+        #     "uav_loss_gamma": 2.0,
+        #     "uav_loss_alpha": 0.30,
+        #     "uav_noise_beta": 0.2,
+        #     "tail_class_boost": 1.35,       # 只放大配置中尾类 bus/truck 对分类 loss 的贡献
+        #     "use_weighted_sampler": False,
+        #     "sample_tail_gain": 1.0,
+        # },
+        # {
+        #     "yaml": "ultralytics/cfg/models/26/yolo26s_ab06_full_uavdetect.yaml",
+        #     "name": "Exp14_T3_FullTailStrategy",
+        #     "batch": 8,
+        #     "use_uav_loss": True,
+        #     "uav_loss_gamma": 2.0,
+        #     "uav_loss_alpha": 0.30,
+        #     "uav_noise_beta": 0.2,
+        #     "tail_class_boost": 1.35,
+        #     "use_weighted_sampler": True,
+        #     "sample_tail_gain": 1.4,
+        # },
     ]
 
     # =========================================================
@@ -246,19 +246,19 @@ def main():
             device=0,                             # 使用第 0 张 GPU
             workers=8,                            # dataloader 线程数
             optimizer="AdamW",                    # 优化器，AdamW 对改进结构通常更稳
-            lr0=0.0015,                           # 初始学习率
+            lr0=0.001,                           # 初始学习率
             lrf=0.1,                              # 最终学习率比例，最终 lr = lr0 * lrf
             momentum=0.937,                       # 优化器动量参数
             weight_decay=0.0005,                  # 权重衰减，抑制过拟合
             warmup_epochs=3.0,                    # warmup 轮数，训练初期稳定梯度
             patience=0,                           # 关闭早停，保证各消融组训练轮数公平
-            amp=False,                            # 是否启用混合精度，False 更稳定但速度稍慢
+            amp=True,                            # 是否启用混合精度，False 更稳定但速度稍慢
             cache=False,                          # 是否缓存数据，机械硬盘空间/内存不够时建议 False
 
             # -------------------------------------------------
             # 无人机航拍增强设置
             # -------------------------------------------------
-            multi_scale=0.2,                      # 多尺度训练幅度，增强尺度变化鲁棒性
+            multi_scale=0.0,                      # 多尺度训练幅度，增强尺度变化鲁棒性
             mosaic=1.0,                           # Mosaic 增强概率，提升密集小目标学习
             close_mosaic=15,                      # 最后 15 个 epoch 关闭 Mosaic，利于收敛
             mixup=0.05,                           # MixUp 概率，轻微提升泛化，过大可能伤害小目标
