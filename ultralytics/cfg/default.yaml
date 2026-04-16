@@ -131,9 +131,9 @@ erasing: 0.4 # (float) random erasing probability for classification (0.0–1.0)
 cfg: # (str, optional) path to a config.yaml that overrides defaults
 
 use_uav_loss: False # (bool) enable dynamic robust long-tail UAV classification loss
-uav_loss_gamma: 2.0 # (float) focal gamma for UAV long-tail classification loss
-uav_loss_alpha: 0.25 # (float) alpha balance for UAV long-tail classification loss
-uav_noise_beta: 0.2 # (float) noise suppression strength for UAV classification loss
+uav_loss_gamma: 1.0 # (float) focal gamma for UAV long-tail classification loss
+uav_loss_alpha: 0.5 # (float) alpha balance for UAV long-tail classification loss
+uav_noise_beta: 0.05 # (float) noise suppression strength for UAV classification loss
 uav_tail_temperature: 1.0 # (float) tail-class boost temperature for UAV classification loss
 uav_loss_trunc: 3.0 # (float) lower bound strength for truncated robust classification weighting
 tail_class_idx: [1, 2] # (list[int]) EVD4UAV tail class ids: car=0, bus=1, truck=2, so bus/truck=[1,2]

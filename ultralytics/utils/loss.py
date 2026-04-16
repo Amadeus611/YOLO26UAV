@@ -128,7 +128,8 @@ class DynamicRobustFocalLoss(nn.Module):
         if class_weights is not None:
             loss = loss * class_weights
         if tail_boost is not None:
-            loss = loss * torch.pow(tail_boost, self.tail_temperature)
+            positive_boost = 1.0 + (torch.pow(tail_boost, self.tail_temperature) - 1.0) * target.clamp(0.0, 1.0)
+            loss = loss * positive_boost
         return loss
 
 

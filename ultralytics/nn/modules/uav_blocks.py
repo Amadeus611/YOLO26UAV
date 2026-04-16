@@ -43,6 +43,7 @@ class TextureAwareEnhance(nn.Module):
         self.edge_expand = Conv(hidden, c2, 1, act=False)
         self.fuse = Conv(c2 * 3, c2, 1)
         self.channel_gate = _ChannelGate(c2)
+        self.gamma = nn.Parameter(torch.zeros(1))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         identity = self.shortcut(x)
@@ -51,7 +52,7 @@ class TextureAwareEnhance(nn.Module):
         edge = self.edge_act(self.edge_bn(self.edge_h(edge) + self.edge_v(edge)))
         edge = self.edge_expand(edge)
         fused = self.fuse(torch.cat((identity, texture, edge), 1))
-        return identity + fused * self.channel_gate(fused)
+        return identity + self.gamma * fused * self.channel_gate(fused)
 
 
 class CrossScaleSelectiveFusion(nn.Module):
@@ -63,10 +64,11 @@ class CrossScaleSelectiveFusion(nn.Module):
         self.local = nn.Sequential(DWConv(c2, c2, 3), Conv(c2, c2, 1))
         self.channel_gate = _ChannelGate(c2, reduction=reduction)
         self.spatial_gate = nn.Sequential(nn.Conv2d(2, 1, 7, padding=3, bias=False), nn.Sigmoid())
+        self.gamma = nn.Parameter(torch.zeros(1))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         base = self.align(x)
         local = self.local(base)
         channel = self.channel_gate(local)
         spatial = self.spatial_gate(torch.cat((local.mean(1, keepdim=True), local.amax(1, keepdim=True)), 1))
-        return base + local * channel * spatial
+        return base + self.gamma * local * channel * spatial

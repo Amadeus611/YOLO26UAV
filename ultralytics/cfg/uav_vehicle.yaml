@@ -40,22 +40,22 @@ hsv_s: 0.5
 hsv_v: 0.3
 
 # class imbalance and noisy-label robustness
-cls: 0.8
+cls: 1.2
 cls_pw: 0.5
 use_uav_loss: true
-uav_loss_gamma: 2.0
-uav_loss_alpha: 0.3
-uav_noise_beta: 0.2
-uav_tail_temperature: 1.1
+uav_loss_gamma: 1.0
+uav_loss_alpha: 0.5
+uav_noise_beta: 0.05
+uav_tail_temperature: 1.0
 uav_loss_trunc: 3.0
 tail_class_idx: [1, 2] # bus/truck class indices in EVD4UAV
-tail_class_boost: 1.35
+tail_class_boost: 1.15
 manual_class_weights: []
 
 # weighted sampling for bus/truck
-use_weighted_sampler: true
+use_weighted_sampler: false
 sample_weight_power: 0.6
-sample_tail_gain: 1.4
+sample_tail_gain: 1.0
 sample_tail_classes: [1, 2] # bus/truck class indices in EVD4UAV
 
 # validation / logging
