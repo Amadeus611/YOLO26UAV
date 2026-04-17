@@ -412,6 +412,7 @@ class v8DetectionLoss:
         self.tail_class_idx = torch.as_tensor(getattr(h, "tail_class_idx", []), dtype=torch.long, device=device)
         self.tail_boost = float(getattr(h, "tail_class_boost", 1.0))
         self.use_uav_loss = bool(getattr(h, "use_uav_loss", False))
+        self.uav_loss_weight = float(getattr(h, "uav_loss_weight", 0.05))
 
         self.assigner = TaskAlignedAssigner(
             topk=tal_topk,
@@ -498,19 +499,19 @@ class v8DetectionLoss:
 
         # Cls loss with optional class weighting
         class_weights = self.class_weights.to(dtype) if self.class_weights is not None else None
-        if self.use_uav_loss:
-            loss_cls = self.dynamic_cls(
+        bce_loss = self.bce(pred_scores, target_scores.to(dtype))  # (bs, num_anchors, nc)
+        if class_weights is not None:
+            bce_loss *= class_weights
+        loss[1] = bce_loss.sum() / target_scores_sum
+
+        if self.use_uav_loss and self.uav_loss_weight > 0:
+            aux_loss = self.dynamic_cls(
                 pred_scores,
                 target_scores.to(dtype),
                 class_weights=class_weights,
                 tail_boost=self.get_tail_boost_tensor(pred_scores),
             )
-            loss[1] = loss_cls.sum() / target_scores_sum
-        else:
-            bce_loss = self.bce(pred_scores, target_scores.to(dtype))  # (bs, num_anchors, nc)
-            if class_weights is not None:
-                bce_loss *= class_weights
-            loss[1] = bce_loss.sum() / target_scores_sum  # BCE
+            loss[1] = loss[1] + self.uav_loss_weight * aux_loss.sum() / target_scores_sum
 
         # Bbox loss
         if fg_mask.sum():

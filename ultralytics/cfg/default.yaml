@@ -136,6 +136,7 @@ uav_loss_alpha: 0.5 # (float) alpha balance for UAV long-tail classification los
 uav_noise_beta: 0.05 # (float) noise suppression strength for UAV classification loss
 uav_tail_temperature: 1.0 # (float) tail-class boost temperature for UAV classification loss
 uav_loss_trunc: 3.0 # (float) lower bound strength for truncated robust classification weighting
+uav_loss_weight: 0.05 # (float) auxiliary UAV loss weight added on top of BCE classification loss
 tail_class_idx: [1, 2] # (list[int]) EVD4UAV tail class ids: car=0, bus=1, truck=2, so bus/truck=[1,2]
 tail_class_boost: 1.0 # (float) extra class emphasis applied to tail_class_idx
 manual_class_weights: [] # (list[float]) optional per-class weights overriding cls_pw weighting

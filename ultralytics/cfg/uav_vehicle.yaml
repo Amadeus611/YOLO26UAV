@@ -48,6 +48,7 @@ uav_loss_alpha: 0.5
 uav_noise_beta: 0.05
 uav_tail_temperature: 1.0
 uav_loss_trunc: 3.0
+uav_loss_weight: 0.05
 tail_class_idx: [1, 2] # bus/truck class indices in EVD4UAV
 tail_class_boost: 1.15
 manual_class_weights: []
