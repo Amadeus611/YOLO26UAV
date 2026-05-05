@@ -2,7 +2,7 @@
 
 # Ablation A0: original YOLO26s baseline with P3/P4/P5 detection outputs.
 
-nc: 80
+nc: 3
 end2end: True
 reg_max: 1
 scales:

@@ -151,8 +151,31 @@ class DetectionTrainer(BaseTrainer):
         if getattr(self.model, "end2end"):
             self.model.set_head_attr(max_det=self.args.max_det)
 
+    def _auto_detect_tail_classes(self):
+        """Auto-detect underrepresented classes and set tail_class_idx / sample_tail_classes."""
+        nc = self.data["nc"]
+        names = self.data.get("names", {})
+        classes = np.concatenate([lb["cls"].flatten() for lb in self.train_loader.dataset.labels], 0)
+        if classes.size == 0:
+            return
+        counts = np.bincount(classes.astype(int), minlength=nc).astype(np.float32)
+        median_freq = np.median(counts[counts > 0]) if np.any(counts > 0) else 1.0
+        tail = [i for i in range(nc) if counts[i] < median_freq * 0.5 and counts[i] > 0]
+        if not tail:
+            return
+
+        # Only update if the user left the lists empty (don't override explicit config)
+        if not list(getattr(self.args, "tail_class_idx", [])):
+            self.args.tail_class_idx = tail
+            LOGGER.info(f"Auto-detected tail classes for loss boost: {tail} ({[names.get(i, i) for i in tail]})")
+        if not list(getattr(self.args, "sample_tail_classes", [])):
+            self.args.sample_tail_classes = tail
+            LOGGER.info(f"Auto-detected tail classes for sampling: {tail} ({[names.get(i, i) for i in tail]})")
+
     def set_class_weights(self):
         """Compute and set class weights for handling class imbalance."""
+        self._auto_detect_tail_classes()
+
         manual = list(getattr(self.args, "manual_class_weights", []))
         if manual:
             if len(manual) != self.data["nc"]:

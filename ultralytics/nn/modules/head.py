@@ -18,7 +18,6 @@ from ultralytics.utils.torch_utils import TORCH_1_11, fuse_conv_and_bn, smart_in
 from .block import DFL, SAVPE, BNContrastiveHead, ContrastiveHead, Proto, Proto26, RealNVP, Residual, SwiGLUFFN
 from .conv import Conv, DWConv
 from .transformer import MLP, DeformableTransformerDecoder, DeformableTransformerDecoderLayer
-from .uav_blocks import TextureAwareEnhance
 from .utils import bias_init_with_prob, linear_init
 
 __all__ = (
@@ -31,6 +30,7 @@ __all__ = (
     "YOLOEDetect",
     "YOLOESegment",
     "UAVDetect",
+    "UAVDetectDelta",
     "v10Detect",
 )
 
@@ -266,12 +266,16 @@ class Detect(nn.Module):
 
 
 class UAVDetect(Detect):
-    """UAV-oriented detect head with stronger fine-grained classification calibration."""
+    """UAV-oriented detect head with lightweight classification calibration."""
 
-    def __init__(self, nc: int = 80, reg_max=16, end2end=False, ch: tuple = ()):
+    def __init__(self, nc: int = 80, reg_max=16, end2end=False, ch: tuple = (), use_refine: bool = True):
         super().__init__(nc=nc, reg_max=reg_max, end2end=end2end, ch=ch)
-        cls_hidden = max(ch[0], min(self.nc, 128))
-        self.cls_refine = nn.ModuleList(TextureAwareEnhance(x, x) for x in ch)
+        self.use_refine = use_refine
+        cls_hidden = max(ch[0] // 2, min(self.nc, 64))
+        if use_refine:
+            self.cls_refine = nn.ModuleList(
+                nn.Sequential(DWConv(x, x, 3), nn.BatchNorm2d(x), nn.SiLU()) for x in ch
+            )
         self.cls_delta = nn.ModuleList(
             nn.Sequential(
                 Conv(x, cls_hidden, 1),
@@ -279,14 +283,15 @@ class UAVDetect(Detect):
             )
             for x in ch
         )
-        self.calib_scale = nn.Parameter(torch.zeros(1))
+        self.calib_scale = nn.Parameter(torch.full((1,), 0.1))
         if end2end:
-            self.one2one_cls_refine = copy.deepcopy(self.cls_refine)
+            if use_refine:
+                self.one2one_cls_refine = copy.deepcopy(self.cls_refine)
             self.one2one_cls_delta = copy.deepcopy(self.cls_delta)
 
     def _forward_cls_branch(self, feat: torch.Tensor, refine: nn.Module, delta: nn.Module, head: nn.Module):
         logits = head(feat)
-        refined = refine(feat)
+        refined = refine(feat) if refine is not None else feat
         return logits + self.calib_scale * delta(refined)
 
     def forward_head(
@@ -298,21 +303,30 @@ class UAVDetect(Detect):
         boxes = torch.cat([box_head[i](x[i]).view(bs, 4 * self.reg_max, -1) for i in range(self.nl)], dim=-1)
 
         if hasattr(self, "one2one_cv3") and cls_head is self.one2one_cv3 and hasattr(self, "one2one_cls_refine"):
-            refine_modules, delta_modules = (
-                self.one2one_cls_refine,
-                self.one2one_cls_delta,
-            )
-        else:
+            refine_modules = self.one2one_cls_refine
+            delta_modules = self.one2one_cls_delta
+        elif hasattr(self, "cls_refine"):
             refine_modules, delta_modules = self.cls_refine, self.cls_delta
+        else:
+            refine_modules, delta_modules = None, self.cls_delta
 
         scores = torch.cat(
             [
-                self._forward_cls_branch(x[i], refine_modules[i], delta_modules[i], cls_head[i]).view(bs, self.nc, -1)
+                self._forward_cls_branch(
+                    x[i], refine_modules[i] if refine_modules is not None else None, delta_modules[i], cls_head[i]
+                ).view(bs, self.nc, -1)
                 for i in range(self.nl)
             ],
             dim=-1,
         )
         return dict(boxes=boxes, scores=scores, feats=x)
+
+
+class UAVDetectDelta(UAVDetect):
+    """UAVDetect variant without cls_refine: delta calibration on raw features."""
+
+    def __init__(self, nc: int = 80, reg_max=16, end2end=False, ch: tuple = ()):
+        super().__init__(nc=nc, reg_max=reg_max, end2end=end2end, ch=ch, use_refine=False)
 
 
 class Segment(Detect):

@@ -137,13 +137,13 @@ uav_noise_beta: 0.05 # (float) noise suppression strength for UAV classification
 uav_tail_temperature: 1.0 # (float) tail-class boost temperature for UAV classification loss
 uav_loss_trunc: 3.0 # (float) lower bound strength for truncated robust classification weighting
 uav_loss_weight: 0.05 # (float) auxiliary UAV loss weight added on top of BCE classification loss
-tail_class_idx: [1, 2] # (list[int]) EVD4UAV tail class ids: car=0, bus=1, truck=2, so bus/truck=[1,2]
+tail_class_idx: [] # (list[int]) tail class ids; auto-set by training script if empty
 tail_class_boost: 1.0 # (float) extra class emphasis applied to tail_class_idx
 manual_class_weights: [] # (list[float]) optional per-class weights overriding cls_pw weighting
 use_weighted_sampler: False # (bool) enable weighted random sampling for long-tail classes
 sample_weight_power: 1.0 # (float) exponent for sample-level class frequency reweighting
 sample_tail_gain: 1.0 # (float) extra multiplier for samples containing tail classes
-sample_tail_classes: [1, 2] # (list[int]) EVD4UAV classes emphasized in weighted sampling: bus=1, truck=2
+sample_tail_classes: [] # (list[int]) tail class ids for weighted sampling; auto-set by training script if empty
 
 # Tracker settings ------------------------------------------------------------------------------------------------------
 tracker: botsort.yaml # (str) tracker config file: botsort.yaml or bytetrack.yaml

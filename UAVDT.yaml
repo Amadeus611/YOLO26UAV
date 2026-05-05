@@ -1,0 +1,11 @@
+# UAVDT -> YOLO (full dataset)
+# Update the path below to your actual full UAVDT dataset location
+path: /home/ssssss/1yolo/Dataset/UAVDT_YOLO
+train: images/train
+val: images/val
+
+nc: 3
+names:
+  0: car
+  1: truck
+  2: bus
